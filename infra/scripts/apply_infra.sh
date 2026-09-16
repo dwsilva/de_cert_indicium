@@ -7,7 +7,7 @@ require terraform kubectl
 
 "${REPO_ROOT}/infra/scripts/gen_secrets.sh"
 
-cd "$TF_DIR"
+cd "$TF_DIR" || die "Diretorio do Terraform nao encontrado: $TF_DIR"
 
 log "terraform init"
 terraform init -input=false -upgrade >/dev/null

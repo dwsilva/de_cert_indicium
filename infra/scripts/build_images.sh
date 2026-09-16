@@ -11,7 +11,7 @@ require docker kind
 AIRFLOW_IMAGE="${AIRFLOW_IMAGE:-banvic/airflow:local}"
 MELTANO_IMAGE="${MELTANO_IMAGE:-banvic/meltano:local}"
 
-cd "$REPO_ROOT"
+cd "$REPO_ROOT" || die "Raiz do repositorio nao encontrada: $REPO_ROOT"
 
 log "Build da imagem do Airflow ($AIRFLOW_IMAGE)"
 docker build -f images/airflow/Dockerfile -t "$AIRFLOW_IMAGE" .

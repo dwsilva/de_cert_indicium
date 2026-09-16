@@ -1,5 +1,7 @@
 # BanVic — Plataforma de Ingestão de Dados
 
+[![CI](https://github.com/dwsilva/de_cert_indicium/actions/workflows/ci.yml/badge.svg)](https://github.com/dwsilva/de_cert_indicium/actions/workflows/ci.yml)
+
 POC de infraestrutura e pipeline de ingestão para o Banco Vitória S.A. (BanVic), desenvolvida
 como entrega da Certificação Data Engineer da Indicium.
 
@@ -398,6 +400,22 @@ Validação da infraestrutura:
 ```bash
 make lint    # terraform fmt -check + terraform validate
 ```
+
+### Integração contínua
+
+O workflow [`ci.yml`](.github/workflows/ci.yml) roda a cada push e pull request, com cinco
+verificações independentes:
+
+| Job | O que valida |
+|---|---|
+| Terraform | `fmt -check`, `init -backend=false` e `validate` |
+| Scripts de infraestrutura | ShellCheck e bit de execução dos `.sh` |
+| DAGs do Airflow | Build da imagem e os 13 testes estruturais |
+| Projeto Meltano | Build da imagem — quebra se algum tap/target não instalar |
+| Varredura de segredos | Falha se `terraform.tfvars`, `.tfstate`, `.env`, `.pem`/`.key` ou senha literal entrarem no versionamento |
+
+Uma tag `v*` dispara também o [`release.yml`](.github/workflows/release.yml), que publica a
+release usando a seção correspondente do [CHANGELOG](CHANGELOG.md) como descrição.
 
 ---
 

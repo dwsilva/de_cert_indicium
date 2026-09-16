@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+# Cancela execuções antigas do mesmo branch quando chega um commit novo.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+
+      - name: Formatação
+        run: terraform -chdir=infra/terraform fmt -check -recursive
+
+      - name: Inicialização (sem backend)
+        run: terraform -chdir=infra/terraform init -backend=false -input=false
+
+      - name: Validação
+        run: terraform -chdir=infra/terraform validate
+
+  scripts:
+    name: Scripts de infraestrutura
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ShellCheck
+        run: |
+          docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable \
+            -x -e SC1091 infra/scripts/*.sh
+
+      - name: Bit de execução dos scripts
+        run: |
+          faltando=$(find infra/scripts -name '*.sh' ! -perm -u+x)
+          if [ -n "$faltando" ]; then
+            echo "Scripts sem permissão de execução:"
+            echo "$faltando"
+            exit 1
+          fi
+
+  dags:
+    name: DAGs do Airflow
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build da imagem do Airflow
+        run: docker build -f images/airflow/Dockerfile -t banvic/airflow:ci .
+
+      # Os testes rodam dentro da imagem, no mesmo ambiente do runtime.
+      - name: Testes estruturais
+        run: |
+          docker run --rm --entrypoint pytest \
+            -v "$PWD/tests:/opt/airflow/tests:ro" \
+            -e AIRFLOW__CORE__LOAD_EXAMPLES=False \
+            banvic/airflow:ci /opt/airflow/tests -q
+
+  meltano:
+    name: Projeto Meltano
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # O build instala tap-csv e target-postgres; se algum plugin quebrar,
+      # a imagem não é gerada.
+      - name: Build da imagem do Meltano
+        run: docker build -f images/meltano/Dockerfile -t banvic/meltano:ci .
+
+      - name: Versão do Meltano
+        run: docker run --rm banvic/meltano:ci --version
+
+  segredos:
+    name: Varredura de segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Nenhum arquivo de credencial versionado
+        run: |
+          encontrados=$(git ls-files \
+            | grep -E '(terraform\.tfvars$|\.tfstate|^\.env$|\.pem$|\.key$)' \
+            || true)
+          if [ -n "$encontrados" ]; then
+            echo "Arquivos de credencial no versionamento:"
+            echo "$encontrados"
+            exit 1
+          fi
+
+      - name: Nenhuma senha literal no código
+        run: |
+          padrao='(password|secret_key|access_key|senha)[[:space:]]*[=:][[:space:]]*"[A-Za-z0-9+/_-]{8,}"'
+          encontrados=$(git grep -nIE "$padrao" -- . \
+            ':!*.example' ':!.github/workflows/*' \
+            | grep -viE 'TROQUE-ME|\$\{|\$[A-Z_]+|var\.|local\.' || true)
+          if [ -n "$encontrados" ]; then
+            echo "Possível credencial literal:"
+            echo "$encontrados"
+            exit 1
+          fi
