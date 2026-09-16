@@ -1,0 +1,19 @@
+# Copie para terraform.tfvars e preencha com valores proprios.
+# O arquivo terraform.tfvars esta no .gitignore e nao deve ser versionado.
+#
+# O script infra/scripts/bootstrap.sh gera esse arquivo automaticamente com
+# valores aleatorios caso ele ainda nao exista.
+
+postgres_user     = "banvic"
+postgres_password = "TROQUE-ME"
+
+minio_root_user     = "TROQUE-ME"
+minio_root_password = "TROQUE-ME"
+
+airflow_admin_user           = "admin"
+airflow_admin_password       = "TROQUE-ME"
+airflow_webserver_secret_key = "TROQUE-ME"
+
+# Gere com:
+#   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+airflow_fernet_key = "TROQUE-ME"

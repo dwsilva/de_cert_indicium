@@ -1,0 +1,32 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: banvic
+
+# Cluster de no unico: suficiente para a POC e mais leve para rodar no WSL2.
+# As portas abaixo sao publicadas no host para que a demonstracao nao dependa
+# de "kubectl port-forward" (que costuma cair durante apresentacoes).
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      # Airflow webserver
+      - containerPort: 30080
+        hostPort: 18080
+        protocol: TCP
+      # MinIO - API S3
+      - containerPort: 30900
+        hostPort: 19000
+        protocol: TCP
+      # MinIO - Console web
+      - containerPort: 30901
+        hostPort: 19001
+        protocol: TCP
+      # PostgreSQL (Data Warehouse)
+      - containerPort: 30432
+        hostPort: 15432
+        protocol: TCP
