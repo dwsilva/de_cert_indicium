@@ -1,0 +1,13 @@
+.git/
+data/
+docs/
+tests/
+infra/terraform/.terraform/
+infra/terraform/*.tfstate*
+infra/terraform/terraform.tfvars
+*.zip
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.venv/
+README.md

@@ -1,0 +1,39 @@
+# Dados extraidos do zip (nao versionar o dataset expandido)
+data/landing/
+data/*.csv
+
+# Segredos e estado local
+.env
+*.tfvars
+!*.tfvars.example
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+kubeconfig*
+*.pem
+*.key
+
+# Meltano
+meltano/.meltano/
+meltano/.secrets/
+meltano/output/
+meltano/plugins/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Artefatos locais
+bin/
+logs/

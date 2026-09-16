@@ -1,0 +1,7 @@
+# O projeto roda em Linux/WSL: tudo com final de linha LF, inclusive quando
+# clonado no Windows. Scripts e Makefile quebram com CRLF.
+* text=auto eol=lf
+
+*.zip   binary
+*.png   binary
+*.jpg   binary
