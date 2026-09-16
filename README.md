@@ -379,7 +379,12 @@ Quem clona o repositório não recebe nenhum segredo e gera os seus no primeiro 
 │   ├── meta_ingestion_log.sql    # DDL de controle
 │   └── verificacao.sql           # conferência final
 ├── tests/test_dags.py            # testes estruturais das DAGs
-└── docs/                         # arquitetura, apresentação e roteiro do vídeo
+├── .github/workflows/            # CI e publicação de release
+└── docs/
+    ├── arquitetura.md            # detalhe de implementação e alternativas avaliadas
+    ├── apresentacao.pptx / .pdf  # apresentação final
+    ├── apresentacao.md           # conteúdo dos slides em texto
+    └── roteiro_video.md          # roteiro da gravação
 ```
 
 ---
