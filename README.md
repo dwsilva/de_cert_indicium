@@ -167,18 +167,20 @@ DAG e rodar só `make images` seguido de `kubectl rollout restart`).
 
 Ao final, os serviços ficam disponíveis no host:
 
-| Serviço | Endereço |
-|---|---|
-| Airflow | <http://localhost:18080> |
-| MinIO (console) | <http://localhost:19001> |
-| MinIO (API S3) | <http://localhost:19000> |
-| PostgreSQL (DW) | `localhost:15432`, banco `banvic_dw` |
+| Serviço | Endereço | Login |
+|---|---|---|
+| Airflow | <http://localhost:18080> | usuário `admin`, senha via `make credenciais` |
+| MinIO (console) | <http://localhost:19001> | access/secret key via `make credenciais` |
+| MinIO (API S3) | <http://localhost:19000> | — |
+| PostgreSQL (DW) | `localhost:15432`, banco `banvic_dw` | usuário `banvic`, senha via `make credenciais` |
 
-As credenciais são geradas aleatoriamente na primeira execução:
-
-```bash
-make credenciais
-```
+> **Senhas.** Não existe senha fixa no projeto: todas são geradas aleatoriamente na primeira
+> execução do `make up` e ficam em `infra/terraform/terraform.tfvars`, que não é versionado.
+> Para consultá-las a qualquer momento:
+>
+> ```bash
+> make credenciais
+> ```
 
 ---
 
@@ -400,6 +402,9 @@ make lint    # terraform fmt -check + terraform validate
 ---
 
 ## Problemas comuns
+
+**Não consigo logar no Airflow.** O usuário é `admin` e a senha é gerada na primeira execução,
+não é fixa. Rode `make credenciais` para vê-la.
 
 **Porta já em uso ao criar o cluster.** As portas publicadas são 18080, 19000, 19001 e 15432.
 Se alguma estiver ocupada, ajuste `infra/kind/cluster.yaml` e recrie o cluster com `make down && make up`.
