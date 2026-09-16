@@ -1,0 +1,89 @@
+version: 1
+default_environment: prod
+project_id: banvic-erp-ingestion
+send_anonymous_usage_stats: false
+
+environments:
+  - name: prod
+
+# ---------------------------------------------------------------------------
+# Os plugins sao declarados de forma completa (custom plugin definition) em vez
+# de resolvidos pelo Meltano Hub. Isso torna o build da imagem reprodutivel e
+# independente de chamadas externas em tempo de execucao.
+#
+# Nenhuma credencial aparece aqui: todos os valores sensiveis chegam por
+# variavel de ambiente, injetada a partir de um Secret do Kubernetes.
+# ---------------------------------------------------------------------------
+plugins:
+  extractors:
+    - name: tap-csv
+      namespace: tap_csv
+      variant: meltanolabs
+      pip_url: git+https://github.com/MeltanoLabs/tap-csv.git@v1.3.2
+      executable: tap-csv
+      capabilities:
+        - catalog
+        - discover
+      settings:
+        - name: files
+          kind: array
+        - name: add_metadata_columns
+          kind: boolean
+      config:
+        add_metadata_columns: true
+        files:
+          - entity: agencias
+            path: ${BANVIC_LANDING_PATH}/agencias.csv
+            keys: [cod_agencia]
+          - entity: clientes
+            path: ${BANVIC_LANDING_PATH}/clientes.csv
+            keys: [cod_cliente]
+          - entity: colaboradores
+            path: ${BANVIC_LANDING_PATH}/colaboradores.csv
+            keys: [cod_colaborador]
+          - entity: colaborador_agencia
+            path: ${BANVIC_LANDING_PATH}/colaborador_agencia.csv
+            keys: [cod_colaborador, cod_agencia]
+          - entity: contas
+            path: ${BANVIC_LANDING_PATH}/contas.csv
+            keys: [num_conta]
+          - entity: propostas_credito
+            path: ${BANVIC_LANDING_PATH}/propostas_credito.csv
+            keys: [cod_proposta]
+          - entity: transacoes
+            path: ${BANVIC_LANDING_PATH}/transacoes.csv
+            keys: [cod_transacao]
+
+  loaders:
+    - name: target-postgres
+      namespace: target_postgres
+      variant: meltanolabs
+      pip_url: meltanolabs-target-postgres==0.0.14
+      executable: target-postgres
+      settings:
+        - name: host
+        - name: port
+          kind: integer
+        - name: user
+        - name: password
+          kind: password
+        - name: database
+        - name: default_target_schema
+        - name: add_record_metadata
+          kind: boolean
+        - name: load_method
+        - name: activate_version
+          kind: boolean
+      config:
+        host: ${BANVIC_DW_HOST}
+        port: ${BANVIC_DW_PORT}
+        user: ${BANVIC_DW_USER}
+        password: ${BANVIC_DW_PASSWORD}
+        database: ${BANVIC_DW_DATABASE}
+        default_target_schema: ${BANVIC_DW_SCHEMA}
+        # Colunas _sdc_* de controle: dao rastreabilidade de quando cada
+        # registro foi extraido e carregado.
+        add_record_metadata: true
+        # As chaves primarias declaradas no tap fazem o target executar MERGE
+        # em vez de INSERT. E o que garante a idempotencia da carga.
+        load_method: upsert

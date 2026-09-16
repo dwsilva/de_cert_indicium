@@ -1,0 +1,9 @@
+# Providers usados pelas DAGs.
+# As versoes seguem o constraints da imagem base (Airflow 2.10.5 / Python 3.11).
+apache-airflow-providers-cncf-kubernetes==10.0.1
+apache-airflow-providers-postgres==5.14.0
+apache-airflow-providers-amazon==9.1.0
+
+# Usado por "make test" (testes estruturais das DAGs rodam dentro da imagem,
+# garantindo que a validacao ocorra no mesmo ambiente do runtime).
+pytest==8.3.4
