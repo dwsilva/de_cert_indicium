@@ -57,6 +57,6 @@ trabalho da Certificação Data Engineer da Indicium.
 - CI com validação de Terraform, ShellCheck, testes das DAGs, build do Meltano e
   varredura de credenciais versionadas.
 - README com diagrama da arquitetura, passo a passo e estratégia de ingestão;
-  documento de arquitetura, conteúdo da apresentação e roteiro do vídeo em `docs/`.
+  documento de arquitetura e apresentação final em `docs/`.
 
 [v1.0.0]: https://github.com/dwsilva/de_cert_indicium/releases/tag/v1.0.0

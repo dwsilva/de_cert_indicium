@@ -382,9 +382,7 @@ Quem clona o repositório não recebe nenhum segredo e gera os seus no primeiro 
 ├── .github/workflows/            # CI e publicação de release
 └── docs/
     ├── arquitetura.md            # detalhe de implementação e alternativas avaliadas
-    ├── apresentacao.pptx / .pdf  # apresentação final
-    ├── apresentacao.md           # conteúdo dos slides em texto
-    └── roteiro_video.md          # roteiro da gravação
+    └── apresentacao.pptx / .pdf  # apresentação final
 ```
 
 ---
