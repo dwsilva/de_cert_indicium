@@ -22,6 +22,7 @@ uma ingestão ELT feita em Meltano.
 - [Subindo o ambiente](#subindo-o-ambiente)
 - [Executando o pipeline](#executando-o-pipeline)
 - [Estratégia de ingestão](#estratégia-de-ingestão)
+- [Modelo de dados da origem](#modelo-de-dados-da-origem)
 - [A DAG](#a-dag)
 - [Resiliência e monitoramento](#resiliência-e-monitoramento)
 - [Gerenciamento de segredos](#gerenciamento-de-segredos)
@@ -268,6 +269,77 @@ de tipos, o padrão de nomes e as regras de negócio pertencem à camada de tran
 
 ---
 
+## Modelo de dados da origem
+
+As sete tabelas do ERP formam seis entidades e um relacionamento associativo:
+
+```mermaid
+erDiagram
+    CLIENTE ||--o{ CONTA : possui
+    AGENCIA ||--o{ CONTA : abriga
+    COLABORADOR ||--o{ CONTA : gerencia
+    CONTA ||--o{ TRANSACAO : registra
+    CLIENTE ||--o{ PROPOSTA_CREDITO : solicita
+    COLABORADOR ||--o{ PROPOSTA_CREDITO : atende
+    AGENCIA ||--o{ COLABORADOR : lota
+
+    CLIENTE {
+        string cod_cliente PK
+        string cpfcnpj
+        string tipo_cliente
+        string data_inclusao
+    }
+    AGENCIA {
+        string cod_agencia PK
+        string nome
+        string uf
+        string tipo_agencia
+    }
+    COLABORADOR {
+        string cod_colaborador PK
+        string cpf
+        string email
+    }
+    CONTA {
+        string num_conta PK
+        string cod_cliente FK
+        string cod_agencia FK
+        string cod_colaborador FK
+        string tipo_conta
+        string saldo_total
+    }
+    TRANSACAO {
+        string cod_transacao PK
+        string num_conta FK
+        string data_transacao
+        string nome_transacao
+        string valor_transacao
+    }
+    PROPOSTA_CREDITO {
+        string cod_proposta PK
+        string cod_cliente FK
+        string cod_colaborador FK
+        string valor_proposta
+        string status_proposta
+    }
+```
+
+O modelo conceitual completo — dicionário de entidades, cardinalidades em notação
+(mínimo, máximo) e observações sobre a qualidade da origem — está em
+[`docs/modelo_conceitual.pdf`](docs/modelo_conceitual.pdf).
+
+Três constatações levantadas na carga, registradas porque afetam a camada seguinte:
+
+- **Integridade referencial incompleta.** Uma conta e quatro propostas de crédito apontam para
+  clientes que não existem em `clientes`. O schema `raw` preserva o dado como veio; decidir
+  entre descartar, isolar em quarentena ou criar um cliente desconhecido é papel da
+  transformação.
+- **`colaborador_agencia` é N:N na estrutura, 1:N nos dados.** Cada colaborador está lotado em
+  exatamente uma agência. A associativa foi mantida para não restringir o domínio da origem.
+- **`tipo_cliente` admite PF e PJ, mas a base só traz PF.**
+
+---
+
 ## A DAG
 
 [`dags/banvic_erp_ingestao.py`](dags/banvic_erp_ingestao.py) — agendada para `35 4 * * *`
@@ -381,8 +453,9 @@ Quem clona o repositório não recebe nenhum segredo e gera os seus no primeiro 
 ├── tests/test_dags.py            # testes estruturais das DAGs
 ├── .github/workflows/            # CI e publicação de release
 └── docs/
-    ├── arquitetura.md            # detalhe de implementação e alternativas avaliadas
-    └── apresentacao.pptx / .pdf  # apresentação final
+    ├── arquitetura.md                 # detalhe de implementação e alternativas avaliadas
+    ├── modelo_conceitual.pptx / .pdf  # modelo conceitual de dados
+    └── apresentacao.pptx / .pdf       # apresentação final
 ```
 
 ---
